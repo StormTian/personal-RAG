@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Tiny RAG Demo",
+    "subtitle": "Local RAG Laboratory",
+    "description": "Enter a question to see offline retrieval-generated answers and matched knowledge snippets. This demo doesn't rely on third-party backend frameworks, making it easy to customize for your own prototypes."
+  },
+  "search": {
+    "title": "Ask",
+    "badge": "TF-IDF + Chunk Retrieval",
+    "placeholder": "Enter your question for the document library",
+    "button": "Start Search",
+    "buttonLoading": "Searching...",
+    "recallCount": "Recall Count",
+    "noResults": "No context matches found",
+    "noAnswer": "No answer generated",
+    "history": "Search History",
+    "clearHistory": "Clear History",
+    "hitCount": "Found {count} context matches"
+  },
+  "library": {
+    "title": "Document Library",
+    "description": "{documents} documents indexed, split into {chunks} chunks",
+    "formats": "Supported Formats",
+    "embedding": "Embedding",
+    "reranker": "Reranker",
+    "retrieval": "Retrieval Pipeline",
+    "reload": "Reload Library",
+    "empty": "No documents in the library yet",
+    "skipped": "Skipped {count} files",
+    "uploadTitle": "Upload Documents",
+    "uploadDragText": "Click or drag files to this area to upload",
+    "uploadHint": "Supports PDF, DOCX, TXT, Markdown formats",
+    "uploadSuccess": "Upload successful",
+    "uploadError": "Upload failed"
+  },
+  "files": {
+    "title": "File List",
+    "empty": "No files",
+    "deleteConfirm": "Are you sure you want to delete file \"{filename}\"?",
+    "deleteSuccess": "File \"{filename}\" deleted successfully",
+    "deleteError": "Failed to delete file \"{filename}\""
+  },
+  "common": {
+    "delete": "Delete",
+    "confirm": "Confirm",
+    "cancel": "Cancel"
+  },
+  "history": {
+    "title": "Upload History",
+    "filename": "Filename",
+    "status": "Status",
+    "size": "Size",
+    "time": "Time",
+    "chunks": "Chunks"
+  },
+  "result": {
+    "title": "Answer & Context",
+    "answer": "Answer",
+    "contexts": "Matched Document Snippets",
+    "score": "Score",
+    "vectorScore": "Vec",
+    "bm25Score": "BM25"
+  },
+  "status": {
+    "waiting": "Waiting for question",
+    "loading": "Searching",
+    "success": "Search completed",
+    "error": "Request failed",
+    "reloadSuccess": "Reload completed",
+    "reloadError": "Reload failed"
+  },
+  "error": {
+    "emptyQuery": "Please enter a question",
+    "loadLibrary": "Failed to load library",
+    "unknown": "Unknown error occurred",
+    "retry": "Retry"
+  },
+  "theme": {
+    "light": "Light Mode",
+    "dark": "Dark Mode",
+    "system": "System"
+  }
+}

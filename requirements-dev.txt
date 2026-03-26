@@ -1,0 +1,49 @@
+# RAG Application - Development Dependencies
+# Include all production dependencies
+-r requirements.txt
+
+# Testing
+pytest>=7.4.0
+pytest-cov>=4.1.0
+pytest-asyncio>=0.21.0
+pytest-mock>=3.12.0
+pytest-xdist>=3.5.0
+
+# Code quality
+black>=23.12.0
+isort>=5.13.0
+flake8>=6.1.0
+mypy>=1.7.0
+bandit>=1.7.0
+pylint>=3.0.0
+
+# Pre-commit hooks
+pre-commit>=3.6.0
+
+# Documentation
+sphinx>=7.2.0
+sphinx-rtd-theme>=2.0.0
+myst-parser>=2.0.0
+
+# Development tools
+ipython>=8.18.0
+jupyter>=1.0.0
+notebook>=7.0.0
+
+# Debugging
+pdbpp>=0.10.0
+rich>=13.7.0
+
+# Type checking
+types-setuptools>=69.0.0
+types-requests>=2.31.0
+
+# Security scanning
+safety>=2.3.0
+
+# Performance profiling
+py-spy>=0.3.0
+memray>=1.11.0
+
+# Load testing
+locust>=2.20.0

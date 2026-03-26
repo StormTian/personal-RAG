@@ -1,0 +1,43 @@
+# Bandit Configuration
+# Used by: bandit -c bandit.yaml -r .
+
+# Exclude paths from scanning
+exclude_dirs:
+  - tests
+  - test_*
+  - .deps
+  - .venv
+  - venv
+  - build
+  - dist
+  - .tox
+  - .pytest_cache
+  - __pycache__
+  - .git
+  - .github
+
+# Skip specific tests
+skips:
+  # B101: assert_used - We use asserts for internal logic
+  - B101
+  # B105: hardcoded_password_string - False positives in test data
+  - B105
+  # B311: random - We use random for non-security purposes
+  - B311
+  # B603: subprocess_without_shell_equals_true - We use shell=False when needed
+  - B603
+  # B607: start_process_with_partial_path - We control the PATH
+  - B607
+
+# Severity levels
+severity: MEDIUM
+confidence: MEDIUM
+
+# Output format
+format: txt
+
+# Aggregate findings by vulnerability
+aggregate: vulnerability
+
+# Number of processes to use
+number: 1

@@ -1,0 +1,83 @@
+{
+  "app": {
+    "title": "Tiny RAG Demo",
+    "subtitle": "本地可跑的 RAG 小实验室",
+    "description": "输入一个问题，页面会展示离线检索生成的答案，以及命中的知识片段。整个 demo 不依赖第三方后端框架，适合拿来继续改造成你自己的原型。"
+  },
+  "search": {
+    "title": "提问",
+    "badge": "TF-IDF + Chunk Retrieval",
+    "placeholder": "输入你想问文档库的问题",
+    "button": "开始检索",
+    "buttonLoading": "检索中...",
+    "recallCount": "召回条数",
+    "noResults": "没有命中上下文",
+    "noAnswer": "没有生成回答",
+    "history": "搜索历史",
+    "clearHistory": "清空历史",
+    "hitCount": "命中 {count} 条上下文"
+  },
+  "library": {
+    "title": "文档库",
+    "description": "已入库 {documents} 个文档，切分为 {chunks} 个 chunk",
+    "formats": "支持格式",
+    "embedding": "Embedding",
+    "reranker": "Reranker",
+    "retrieval": "检索链路",
+    "reload": "重新入库",
+    "empty": "文档库里还没有可入库的文件",
+    "skipped": "跳过 {count} 个文件",
+    "uploadTitle": "上传文档",
+    "uploadDragText": "点击或拖拽文件到此区域上传",
+    "uploadHint": "支持 PDF、DOCX、TXT、Markdown 等格式",
+    "uploadSuccess": "上传成功",
+    "uploadError": "上传失败"
+  },
+  "files": {
+    "title": "文件列表",
+    "empty": "暂无文件",
+    "deleteConfirm": "确定要删除文件 \"{filename}\" 吗？",
+    "deleteSuccess": "文件 \"{filename}\" 删除成功",
+    "deleteError": "删除文件 \"{filename}\" 失败"
+  },
+  "common": {
+    "delete": "删除",
+    "confirm": "确定",
+    "cancel": "取消"
+  },
+  "history": {
+    "title": "上传历史",
+    "filename": "文件名",
+    "status": "状态",
+    "size": "大小",
+    "time": "时间",
+    "chunks": "分块数"
+  },
+  "result": {
+    "title": "回答与上下文",
+    "answer": "回答",
+    "contexts": "命中的文档片段",
+    "score": "Score",
+    "vectorScore": "Vec",
+    "bm25Score": "BM25"
+  },
+  "status": {
+    "waiting": "等待提问",
+    "loading": "正在检索",
+    "success": "检索完成",
+    "error": "请求失败",
+    "reloadSuccess": "重新入库完成",
+    "reloadError": "重新入库失败"
+  },
+  "error": {
+    "emptyQuery": "请输入问题",
+    "loadLibrary": "读取文档库失败",
+    "unknown": "发生未知错误",
+    "retry": "重试"
+  },
+  "theme": {
+    "light": "浅色模式",
+    "dark": "深色模式",
+    "system": "跟随系统"
+  }
+}
