@@ -74,6 +74,7 @@ export interface SearchHistoryItem {
 export interface UploadResponse {
   status: string;
   message: string;
+  success?: boolean;
   file: {
     original_name: string;
     saved_name: string;
