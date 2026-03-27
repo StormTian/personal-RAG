@@ -33,11 +33,13 @@ export default defineConfig(({ mode }) => {
       rollupOptions: {
         output: {
           manualChunks: {
-            vendor: ['react', 'react-dom', 'react-router-dom'],
-            ui: ['antd', '@ant-design/icons'],
-            query: ['@tanstack/react-query'],
-            state: ['zustand'],
-            i18n: ['i18next', 'react-i18next'],
+            'vendor-react': ['react', 'react-dom', 'react-router-dom'],
+            'vendor-antd': ['antd', '@ant-design/icons'],
+            'vendor-query': ['@tanstack/react-query'],
+            'vendor-state': ['zustand'],
+            'vendor-i18n': ['i18next', 'react-i18next', 'i18next-browser-languagedetector'],
+            'vendor-utils': ['axios', 'dayjs', 'lodash-es', 'nanoid'],
+            'vendor-prism': ['prismjs'],
           },
         },
       },

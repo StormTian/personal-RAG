@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { lazy, Suspense } from 'react';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { ReactQueryDevtools } from '@tanstack/react-query-devtools';
 import { MainLayout } from '@/layouts/MainLayout/MainLayout';
-import { Home } from '@/pages/Home/Home';
 import { ErrorBoundary } from '@/components/ErrorBoundary/ErrorBoundary';
+import { PageLoader } from '@/components/PageLoader/PageLoader';
+
+const Home = lazy(() => import('@/pages/Home/Home').then(module => ({ default: module.Home })));
 
 const queryClient = new QueryClient({
   defaultOptions: {
@@ -20,7 +22,9 @@ export const App: React.FC = () => {
     <QueryClientProvider client={queryClient}>
       <ErrorBoundary>
         <MainLayout>
-          <Home />
+          <Suspense fallback={<PageLoader />}>
+            <Home />
+          </Suspense>
         </MainLayout>
       </ErrorBoundary>
       {import.meta.env.DEV && <ReactQueryDevtools initialIsOpen={false} />}
