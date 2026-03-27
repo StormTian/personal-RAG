@@ -4,11 +4,11 @@ Unit tests for reranker backends.
 
 import pytest
 from unittest.mock import Mock
-from app import (
+from rag_system.backends import (
     LocalHeuristicReranker,
     OpenAICompatibleListwiseReranker,
-    CandidateScore,
 )
+from rag_system.core import CandidateScore
 
 
 class TestLocalHeuristicReranker:

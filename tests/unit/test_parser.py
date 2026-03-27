@@ -6,7 +6,7 @@ import pytest
 import tempfile
 from pathlib import Path
 from unittest.mock import patch, MagicMock
-from app import (
+from rag_system.utils import (
     read_text_file,
     split_paragraphs,
     first_heading,
@@ -209,7 +209,7 @@ class TestSplitParagraphs:
 class TestExtractPdfFile:
     """Tests for extract_pdf_file function."""
     
-    @patch('app.PdfReader')
+    @patch('pypdf.PdfReader')
     def test_extract_with_pypdf(self, mock_pdf_reader):
         """Test PDF extraction using pypdf."""
         # Mock the PdfReader
@@ -233,7 +233,7 @@ class TestExtractPdfFile:
     def test_extract_without_pypdf(self, monkeypatch, temp_dir):
         """Test PDF extraction without pypdf available."""
         # Set PdfReader to None to simulate missing pypdf
-        monkeypatch.setattr('app.PdfReader', None)
+        monkeypatch.setattr('pypdf.PdfReader', None)
         
         pdf_path = temp_dir / "test.pdf"
         # Create empty file

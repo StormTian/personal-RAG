@@ -5,11 +5,11 @@ Unit tests for embedding backends.
 import pytest
 import math
 from unittest.mock import Mock, patch, MagicMock
-from app import (
+from rag_system.backends import (
     LocalHashEmbeddingBackend,
     OpenAICompatibleEmbeddingBackend,
-    normalize_vector,
 )
+from rag_system.utils import normalize_vector
 
 
 class TestLocalHashEmbeddingBackend:
@@ -137,7 +137,7 @@ class TestOpenAICompatibleEmbeddingBackend:
         )
         assert backend.base_url == "https://api.example.com"
     
-    @patch('app.post_json')
+    @patch('rag_system.utils.post_json')
     def test_request_batch_success(self, mock_post_json):
         """Test successful batch request."""
         mock_response = {
@@ -159,7 +159,7 @@ class TestOpenAICompatibleEmbeddingBackend:
         assert len(vectors) == 2
         mock_post_json.assert_called_once()
     
-    @patch('app.post_json')
+    @patch('rag_system.utils.post_json')
     def test_request_batch_normalization(self, mock_post_json):
         """Test that embeddings are normalized."""
         mock_response = {
@@ -182,7 +182,7 @@ class TestOpenAICompatibleEmbeddingBackend:
         assert abs(vector[0] - 0.6) < 0.01  # 3/5
         assert abs(vector[1] - 0.8) < 0.01  # 4/5
     
-    @patch('app.post_json')
+    @patch('rag_system.utils.post_json')
     def test_embed_texts_batches(self, mock_post_json):
         """Test that texts are sent in batches."""
         # Mock needs to return appropriate number of embeddings for each call

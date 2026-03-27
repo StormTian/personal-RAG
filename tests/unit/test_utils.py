@@ -4,7 +4,7 @@ Unit tests for utility functions.
 
 import pytest
 import math
-from app import (
+from rag_system.utils import (
     normalize_vector,
     dot_product,
     cosine_similarity,

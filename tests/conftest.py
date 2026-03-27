@@ -17,18 +17,24 @@ from dataclasses import dataclass
 PROJECT_ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
-from app import (
-    TinyRAG,
-    EmbeddingBackend,
-    LocalHashEmbeddingBackend,
-    RerankerBackend,
-    LocalHeuristicReranker,
-    IndexSnapshot,
-    Chunk,
+from rag_system.core.base import (
     SourceDocument,
+    Chunk,
     CandidateScore,
     SearchHit,
     RagResponse,
+    IndexSnapshot,
+)
+from rag_system.backends.embedding import (
+    EmbeddingBackend,
+    LocalHashEmbeddingBackend,
+)
+from rag_system.backends.reranker import (
+    RerankerBackend,
+    LocalHeuristicReranker,
+)
+from rag_system.rag_engine import RAGEngine
+from rag_system.utils.text import (
     tokenize,
     chunk_text,
     cosine_similarity,
@@ -190,9 +196,9 @@ def mock_reranker() -> Mock:
 # ============================================================================
 
 @pytest.fixture(scope="function")
-def rag_instance(sample_library_dir: Path, local_embedding_backend, local_reranker) -> TinyRAG:
-    """Create a TinyRAG instance with sample library."""
-    return TinyRAG(
+def rag_instance(sample_library_dir: Path, local_embedding_backend, local_reranker) -> RAGEngine:
+    """Create a RAGEngine instance with sample library."""
+    return RAGEngine(
         library_dir=sample_library_dir,
         embedding_backend=local_embedding_backend,
         reranker_backend=local_reranker
@@ -200,9 +206,9 @@ def rag_instance(sample_library_dir: Path, local_embedding_backend, local_rerank
 
 
 @pytest.fixture(scope="function")
-def rag_with_mock_backends(sample_library_dir: Path, mock_embedding_backend, mock_reranker) -> TinyRAG:
-    """Create a TinyRAG instance with mock backends."""
-    return TinyRAG(
+def rag_with_mock_backends(sample_library_dir: Path, mock_embedding_backend, mock_reranker) -> RAGEngine:
+    """Create a RAGEngine instance with mock backends."""
+    return RAGEngine(
         library_dir=sample_library_dir,
         embedding_backend=mock_embedding_backend,
         reranker_backend=mock_reranker
@@ -261,7 +267,7 @@ def sample_candidate_scores() -> List[CandidateScore]:
 def minimal_snapshot(sample_chunks: List[Chunk]) -> IndexSnapshot:
     """Create a minimal index snapshot for testing."""
     from collections import Counter
-    from app import chunk_text
+    from rag_system.utils.text import chunk_text
     
     # Generate embeddings for chunks
     backend = LocalHashEmbeddingBackend(dimensions=128, projections_per_token=4)

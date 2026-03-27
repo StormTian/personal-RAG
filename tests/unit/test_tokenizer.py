@@ -3,7 +3,7 @@ Unit tests for text tokenization and processing utilities.
 """
 
 import pytest
-from app import tokenize, split_sentences, split_paragraphs, chunk_text, wrap_paragraph
+from rag_system.utils import tokenize, split_sentences, split_paragraphs, chunk_text, wrap_paragraph
 
 
 class TestTokenize:
