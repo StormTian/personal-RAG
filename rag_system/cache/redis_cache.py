@@ -1,8 +1,11 @@
 """Redis-based cache implementation with lazy import."""
 
 import json
+import logging
 from typing import Any, Optional
 from .base import QueryCache
+
+logger = logging.getLogger(__name__)
 
 
 class RedisCache(QueryCache):
@@ -44,7 +47,8 @@ class RedisCache(QueryCache):
             if value is None:
                 return None
             return json.loads(value)
-        except Exception:
+        except Exception as e:
+            logger.warning(f"RedisCache.get failed for key '{key}': {e}")
             return None
     
     def set(self, key: str, value: Any, ttl: Optional[int] = None) -> None:
@@ -59,32 +63,37 @@ class RedisCache(QueryCache):
                 client.setex(full_key, ttl_seconds, serialized)
             else:
                 client.set(full_key, serialized)
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"RedisCache.set failed for key '{key}': {e}")
     
     def delete(self, key: str) -> None:
         """Delete cached value."""
         try:
             client = self._get_client()
             client.delete(self._make_key(key))
-        except Exception:
-            pass
+        except Exception as e:
+            logger.warning(f"RedisCache.delete failed for key '{key}': {e}")
     
     def clear(self) -> None:
-        """Clear all cached values with this prefix."""
+        """Clear all cached values with this prefix using SCAN to avoid blocking."""
         try:
             client = self._get_client()
             pattern = f"{self._key_prefix}*"
-            keys = client.keys(pattern)
-            if keys:
-                client.delete(*keys)
-        except Exception:
-            pass
+            cursor = 0
+            while True:
+                cursor, keys = client.scan(cursor, match=pattern, count=100)
+                if keys:
+                    client.delete(*keys)
+                if cursor == 0:
+                    break
+        except Exception as e:
+            logger.warning(f"RedisCache.clear failed: {e}")
     
     def exists(self, key: str) -> bool:
         """Check if key exists in cache."""
         try:
             client = self._get_client()
             return bool(client.exists(self._make_key(key)))
-        except Exception:
+        except Exception as e:
+            logger.warning(f"RedisCache.exists failed for key '{key}': {e}")
             return False

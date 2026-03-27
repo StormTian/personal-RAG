@@ -2,13 +2,18 @@
 
 import asyncio
 import gzip
+import hashlib
+import json
 import math
 import pickle
 import threading
 import time
 from collections import Counter
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 from typing import Dict, FrozenSet, List, Optional, Sequence, Set, Tuple
+
+import numpy as np
 
 from .core.base import (
     EmbeddingBackend,
@@ -23,6 +28,8 @@ from .core.base import (
 )
 from .backends.embedding import LocalHashEmbeddingBackend, OpenAICompatibleEmbeddingBackend
 from .backends.reranker import LocalHeuristicReranker, OpenAICompatibleListwiseReranker
+from .backends.vector_store import create_vector_store, VectorStore
+from .cache import create_query_cache, QueryCache
 from .config import Settings, get_settings
 from .exceptions import RetrievalError, ConfigurationError
 from .monitoring.logging_config import get_logger, log_performance
@@ -52,12 +59,28 @@ class RAGEngine(SearchEngine):
         self.embedding_backend = embedding_backend or self._build_embedding_backend()
         self.local_reranker = LocalHeuristicReranker()
         self.reranker_backend = reranker_backend or self._build_reranker_backend()
-        self._loader_registry = None  # Lazy initialization
+        self._loader_registry = None
         self.metrics = get_metrics_collector()
         
         self._lock = threading.RLock()
         self._snapshot: Optional[IndexSnapshot] = None
         self._cache_path = Path(self.settings.cache.cache_dir) / "index_cache.pkl.gz"
+        
+        # Initialize vector store
+        self._vector_store: Optional[VectorStore] = None
+        
+        # Initialize query cache
+        config = self.settings.query_cache
+        if config.enabled:
+            self._query_cache = create_query_cache(
+                backend=config.backend,
+                redis_url=config.redis_url,
+                key_prefix=config.key_prefix,
+                default_ttl=config.ttl,
+                max_items=config.max_memory_items,
+            )
+        else:
+            self._query_cache = None
         
         # Build initial index
         self._snapshot = self._build_snapshot()
@@ -127,6 +150,37 @@ class RAGEngine(SearchEngine):
         
         return sorted(files, key=lambda p: str(p.relative_to(self.library_dir)))
     
+    def _load_single_document(self, path: Path) -> Tuple[Optional[SourceDocument], Optional[str], Optional[str]]:
+        """Load a single document. Returns (document, error_message, relative_path)."""
+        relative_path = str(path.relative_to(self.library_dir))
+        try:
+            document = self.loader_registry.load(path)
+            return document, None, relative_path
+        except Exception as e:
+            return None, str(e), relative_path
+    
+    def _load_documents_parallel(
+        self, 
+        source_files: List[Path]
+    ) -> Tuple[List[SourceDocument], List[Tuple[str, str]]]:
+        """Load documents in parallel using thread pool."""
+        documents: List[SourceDocument] = []
+        skipped_files: List[Tuple[str, str]] = []
+        
+        config = self.settings.performance
+        max_workers = config.max_workers if config.parallel_loading else 1
+        
+        with ThreadPoolExecutor(max_workers=max_workers) as executor:
+            results = list(executor.map(self._load_single_document, source_files))
+        
+        for document, error, relative_path in results:
+            if document:
+                documents.append(document)
+            elif error:
+                skipped_files.append((relative_path, error))
+        
+        return documents, skipped_files
+    
     def _build_snapshot(self) -> IndexSnapshot:
         """Build index snapshot from documents."""
         start_time = time.time()
@@ -143,37 +197,43 @@ class RAGEngine(SearchEngine):
             cached = self._load_from_cache(source_files)
             if cached:
                 logger.info(f"Loaded index from cache: {len(cached.chunks)} chunks")
+                # Initialize vector store from cached embeddings
+                self._init_vector_store_from_embeddings(cached.chunk_embeddings)
                 return cached
         
-        # Build index
-        documents: List[SourceDocument] = []
-        skipped_files: List[Tuple[str, str]] = []
+        # Build index - use parallel loading when enabled
+        if self.settings.performance.parallel_loading:
+            documents, skipped_files = self._load_documents_parallel(source_files)
+        else:
+            documents: List[SourceDocument] = []
+            skipped_files: List[Tuple[str, str]] = []
+            
+            for path in source_files:
+                relative_path = str(path.relative_to(self.library_dir))
+                try:
+                    document = self.loader_registry.load(path)
+                    documents.append(document)
+                except Exception as e:
+                    logger.warning(f"Failed to load {relative_path}: {e}")
+                    skipped_files.append((relative_path, str(e)))
+        
+        # Chunk documents
         chunks: List[Chunk] = []
         chunk_id = 0
         
-        for path in source_files:
-            relative_path = str(path.relative_to(self.library_dir))
-            try:
-                document = self.loader_registry.load(path)
-                documents.append(document)
-                
-                # Chunk document
-                for text in chunk_text(
-                    document.text,
-                    max_chars=self.settings.chunking.max_chars,
-                    overlap=self.settings.chunking.overlap,
-                ):
-                    chunks.append(Chunk(
-                        chunk_id=chunk_id,
-                        source=document.source,
-                        title=document.title,
-                        text=text,
-                    ))
-                    chunk_id += 1
-                    
-            except Exception as e:
-                logger.warning(f"Failed to load {relative_path}: {e}")
-                skipped_files.append((relative_path, str(e)))
+        for document in documents:
+            for text in chunk_text(
+                document.text,
+                max_chars=self.settings.chunking.max_chars,
+                overlap=self.settings.chunking.overlap,
+            ):
+                chunks.append(Chunk(
+                    chunk_id=chunk_id,
+                    source=document.source,
+                    title=document.title,
+                    text=text,
+                ))
+                chunk_id += 1
         
         if not chunks:
             raise ConfigurationError(
@@ -206,6 +266,9 @@ class RAGEngine(SearchEngine):
         ))
         embed_time = (time.time() - embed_start) * 1000
         logger.info(f"Generated embeddings in {embed_time:.2f}ms")
+        
+        # Initialize vector store with embeddings
+        self._init_vector_store_from_embeddings(chunk_embeddings)
         
         # Calculate average document length
         total_tokens = sum(sum(c.values()) for c in token_counters)
@@ -251,6 +314,10 @@ class RAGEngine(SearchEngine):
             if self._cache_path.stat().st_mtime < last_modified:
                 return None
             
+            # SECURITY NOTE: pickle.load() can execute arbitrary code.
+            # The cache file should only be loaded from a trusted location
+            # (self._cache_path under self.settings.cache.cache_dir).
+            # Do not load pickle files from untrusted sources.
             with gzip.open(self._cache_path, 'rb') as f:
                 cached: IndexSnapshot = pickle.load(f)
             
@@ -270,7 +337,11 @@ class RAGEngine(SearchEngine):
         return None
     
     def _save_to_cache(self, snapshot: IndexSnapshot) -> None:
-        """Save snapshot to cache."""
+        """Save snapshot to cache.
+        
+        SECURITY NOTE: pickle.dump() serializes Python objects.
+        The cache file is written to a trusted location only.
+        """
         try:
             self._cache_path.parent.mkdir(parents=True, exist_ok=True)
             with gzip.open(self._cache_path, 'wb') as f:
@@ -278,6 +349,29 @@ class RAGEngine(SearchEngine):
             logger.info(f"Saved index to cache: {self._cache_path}")
         except Exception as e:
             logger.warning(f"Failed to save cache: {e}")
+    
+    def _init_vector_store_from_embeddings(self, embeddings: Tuple[np.ndarray, ...]) -> None:
+        """Initialize vector store with embeddings."""
+        if not embeddings:
+            self._vector_store = None
+            return
+        
+        config = self.settings.vector_store
+        dimension = len(embeddings[0])
+        
+        self._vector_store = create_vector_store(
+            backend=config.backend,
+            dimension=dimension,
+        )
+        
+        vectors = np.array(embeddings, dtype=np.float32)
+        self._vector_store.add(vectors)
+        logger.info(f"Vector store initialized with {len(embeddings)} vectors using {config.backend}")
+    
+    def _make_cache_key(self, query: str, top_k: int, operation: str = "search") -> str:
+        """Generate cache key for query."""
+        key_data = f"{operation}:{query}:{top_k}"
+        return hashlib.md5(key_data.encode()).hexdigest()
     
     def _weighted_overlap(
         self,
@@ -332,6 +426,14 @@ class RAGEngine(SearchEngine):
         """Asynchronous search with metrics."""
         start_time = time.time()
         
+        # Check cache
+        if self._query_cache:
+            cache_key = self._make_cache_key(query, top_k, "search")
+            cached_result = self._query_cache.get(cache_key)
+            if cached_result is not None:
+                self.metrics.increment("query_cache_hits")
+                return [SearchHit(**hit) for hit in cached_result]
+        
         with self._lock:
             snapshot = self._snapshot
         
@@ -352,13 +454,28 @@ class RAGEngine(SearchEngine):
             if not any(query_embedding):
                 return []
             
-            # Dense retrieval
+            # Dense retrieval using vector store if available
             retrieve_start = time.time()
             retrieve_hits: List[Tuple[int, float]] = []
-            for index, chunk_embedding in enumerate(snapshot.chunk_embeddings):
-                score = cosine_similarity(query_embedding, chunk_embedding)
-                if score > 0:
-                    retrieve_hits.append((index, score))
+            
+            if self._vector_store and self._vector_store.size > 0:
+                # Use vector store for efficient search
+                candidate_size = min(
+                    self.reranker_backend.candidate_pool_size(top_k),
+                    self._vector_store.size,
+                )
+                query_vec = np.array(query_embedding, dtype=np.float32)
+                distances, indices = self._vector_store.search(query_vec, k=candidate_size)
+                for dist, idx in zip(distances, indices):
+                    score = 1 - dist  # Convert distance to similarity
+                    if score > 0:
+                        retrieve_hits.append((int(idx), score))
+            else:
+                # Fallback to brute force
+                for index, chunk_embedding in enumerate(snapshot.chunk_embeddings):
+                    score = cosine_similarity(query_embedding, chunk_embedding)
+                    if score > 0:
+                        retrieve_hits.append((index, score))
             
             retrieve_hits.sort(key=lambda x: x[1], reverse=True)
             retrieve_time = (time.time() - retrieve_start) * 1000
@@ -415,6 +532,12 @@ class RAGEngine(SearchEngine):
             self.metrics.record("search_total_time_ms", total_time)
             self.metrics.increment("search_queries")
             
+            # Cache result
+            if self._query_cache:
+                cache_key = self._make_cache_key(query, top_k, "search")
+                self._query_cache.set(cache_key, [hit.__dict__ for hit in hits])
+                self.metrics.increment("query_cache_misses")
+            
             return hits
             
         except Exception as e:
@@ -430,6 +553,19 @@ class RAGEngine(SearchEngine):
     async def answer_async(self, query: str, top_k: int = 3) -> RagResponse:
         """Asynchronous answer generation."""
         start_time = time.time()
+        
+        # Check cache
+        if self._query_cache:
+            cache_key = self._make_cache_key(query, top_k, "answer")
+            cached_result = self._query_cache.get(cache_key)
+            if cached_result is not None:
+                self.metrics.increment("query_cache_hits")
+                return RagResponse(
+                    query=cached_result["query"],
+                    answer_lines=cached_result["answer_lines"],
+                    hits=[SearchHit(**hit) for hit in cached_result["hits"]],
+                    metadata=cached_result.get("metadata", {}),
+                )
         
         hits = await self.search_async(query, top_k)
         
@@ -481,12 +617,25 @@ class RAGEngine(SearchEngine):
         self.metrics.record("answer_generation_time_ms", total_time)
         self.metrics.increment("answers_generated")
         
-        return RagResponse(
+        response = RagResponse(
             query=query,
             answer_lines=answer_lines,
             hits=hits,
             metadata={"total_time_ms": total_time},
         )
+        
+        # Cache result
+        if self._query_cache:
+            cache_key = self._make_cache_key(query, top_k, "answer")
+            self._query_cache.set(cache_key, {
+                "query": query,
+                "answer_lines": answer_lines,
+                "hits": [hit.__dict__ for hit in hits],
+                "metadata": {"total_time_ms": total_time},
+            })
+            self.metrics.increment("query_cache_misses")
+        
+        return response
     
     def reload(self) -> None:
         """Synchronous index reload."""
@@ -495,6 +644,11 @@ class RAGEngine(SearchEngine):
     async def reload_async(self) -> None:
         """Asynchronous index reload."""
         start_time = time.time()
+        
+        # Clear query cache
+        if self._query_cache:
+            self._query_cache.clear()
+            logger.info("Query cache cleared")
         
         with self._lock:
             self._snapshot = self._build_snapshot()

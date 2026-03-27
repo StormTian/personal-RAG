@@ -9,6 +9,32 @@ import json
 
 
 @dataclass
+class VectorStoreConfig:
+    """Vector store configuration."""
+    backend: str = "numpy"  # "faiss" or "numpy"
+    index_path: str = ".index_cache/faiss.index"
+
+
+@dataclass
+class QueryCacheConfig:
+    """Query cache configuration."""
+    enabled: bool = True
+    backend: str = "memory"  # "redis" or "memory"
+    redis_url: str = "redis://localhost:6379/0"
+    ttl: int = 3600
+    key_prefix: str = "rag:query:"
+    max_memory_items: int = 1000
+
+
+@dataclass
+class PerformanceConfig:
+    """Performance configuration."""
+    parallel_loading: bool = True
+    max_workers: int = 4
+    embed_batch_size: int = 32
+
+
+@dataclass
 class EmbeddingConfig:
     """Embedding backend configuration."""
     backend: str = "local-hash"
@@ -146,6 +172,9 @@ class Settings:
         self.server = ServerConfig()
         self.upload = UploadConfig()
         self.history = HistoryConfig()
+        self.vector_store = VectorStoreConfig()
+        self.query_cache = QueryCacheConfig()
+        self.performance = PerformanceConfig()
         self.library_dir: Path = Path("document_library")
         self.debug: bool = False
     
@@ -194,6 +223,12 @@ class Settings:
             settings.upload = UploadConfig(**data["upload"])
         if "history" in data:
             settings.history = HistoryConfig(**data["history"])
+        if "vector_store" in data:
+            settings.vector_store = VectorStoreConfig(**data["vector_store"])
+        if "query_cache" in data:
+            settings.query_cache = QueryCacheConfig(**data["query_cache"])
+        if "performance" in data:
+            settings.performance = PerformanceConfig(**data["performance"])
         if "library_dir" in data:
             settings.library_dir = Path(data["library_dir"])
         if "debug" in data:
@@ -281,6 +316,9 @@ class Settings:
             "server": self.server.__dict__,
             "upload": self.upload.__dict__,
             "history": self.history.__dict__,
+            "vector_store": self.vector_store.__dict__,
+            "query_cache": self.query_cache.__dict__,
+            "performance": self.performance.__dict__,
             "library_dir": str(self.library_dir),
             "debug": self.debug,
         }

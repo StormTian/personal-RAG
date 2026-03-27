@@ -22,8 +22,17 @@ class NumpyVectorStore(VectorStore):
         self._vectors = np.vstack([self._vectors, vectors]) if self._vectors.size else vectors
     
     def search(self, query: np.ndarray, k: int = 10) -> Tuple[np.ndarray, np.ndarray]:
-        """Search for k nearest neighbors using cosine similarity."""
+        """Search for k nearest neighbors using cosine similarity.
+        
+        Note: Batch queries (multiple query vectors) are not supported.
+        Only single query vector searches are handled.
+        """
         query = np.atleast_2d(query)
+        if query.shape[0] > 1:
+            raise ValueError(
+                f"Batch queries are not supported. Expected single query vector, "
+                f"got {query.shape[0]} vectors. Call search() once per query."
+            )
         if self._vectors.size == 0:
             return np.array([]), np.array([])
         
