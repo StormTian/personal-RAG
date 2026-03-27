@@ -252,7 +252,21 @@ def create_app() -> FastAPI:
         
         return {
             "query": query_text,
-            "hits": [hit.to_dict() for hit in hits],
+            "hits": [
+                {
+                    "score": float(round(hit.score, 4)),
+                    "retrieve_score": float(round(hit.retrieve_score, 4)),
+                    "rerank_score": float(round(hit.rerank_score, 4)),
+                    "lexical_score": float(round(hit.lexical_score, 4)),
+                    "title_score": float(round(hit.title_score, 4)),
+                    "llm_score": float(round(hit.llm_score, 4)),
+                    "source": hit.chunk.source,
+                    "title": hit.chunk.title,
+                    "text": hit.chunk.text,
+                    "chunk_id": hit.chunk.chunk_id,
+                }
+                for hit in hits
+            ],
             "total": len(hits),
         }
     
