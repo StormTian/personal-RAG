@@ -20,7 +20,7 @@ export function highlightCode(code: string, language: string): string {
 export function processMarkdown(content: string): string {
   let processed = content
     // Process code blocks
-    .replace(/```(\w+)?\n([\s\S]*?)```/g, (match, lang, code) => {
+    .replace(/```(\w+)?\n([\s\S]*?)```/g, (_match, lang, code) => {
       const language = lang || 'text';
       const highlighted = highlightCode(code.trim(), language);
       return `<pre class="language-${language}" style="background: #f6f8fa; padding: 16px; border-radius: 8px; overflow-x: auto; margin: 8px 0;"><code class="language-${language}">${highlighted}</code></pre>`;

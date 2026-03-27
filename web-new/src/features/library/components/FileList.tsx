@@ -7,13 +7,14 @@ import { filesApi } from '@/services/api';
 const { Text } = Typography;
 
 export interface FileItem {
-  name: string;
-  source?: string;  // 后端API返回的字段
+  name?: string;
+  source?: string;
   size?: number;
-  chars?: number;   // 后端API返回的字段
+  chars?: number;
   modified_at?: string;
   type?: string;
-  file_type?: string;  // 后端API返回的字段
+  file_type?: string;
+  title?: string;
 }
 
 export interface FileListProps {

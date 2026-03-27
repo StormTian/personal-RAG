@@ -20,7 +20,7 @@ export const Home: React.FC = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [searchError, setSearchError] = useState<Error | null>(null);
   
-  const { data: libraryData, isLoading: isLibraryLoading, error: libraryError, refetch: refetchLibrary } = useLibraryQuery();
+  const { data: libraryData, isLoading: isLibraryLoading, error: libraryError, refetch: _refetchLibrary } = useLibraryQuery();
   const { mutate: reloadLibrary, isPending: isReloading } = useReloadMutation();
   const { addToHistory } = useSearchStore();
   
@@ -81,7 +81,7 @@ export const Home: React.FC = () => {
         {/* Right Column - Results */}
         <Col xs={24} lg={14}>
           <ResultPanel
-            data={searchResult}
+            data={searchResult ?? undefined}
             loading={isSearching}
             error={searchError}
             query={searchParams?.query}

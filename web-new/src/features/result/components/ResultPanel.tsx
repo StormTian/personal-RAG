@@ -1,7 +1,7 @@
 import React, { useMemo } from 'react';
 import { Card, Space, Typography, Skeleton, Empty, Alert } from 'antd';
 import { useTranslation } from 'react-i18next';
-import type { SearchResponse, SearchParams } from '@/types';
+import type { SearchResponse } from '@/types';
 import { AnswerCard } from './AnswerCard';
 import { ContextCard } from './ContextCard';
 

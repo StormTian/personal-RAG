@@ -1,5 +1,5 @@
 import React from 'react';
-import { Card, List, Tag, Space, Typography, Button, Empty } from 'antd';
+import { Card, List, Tag, Space, Typography, Button } from 'antd';
 import { ClockCircleOutlined, DeleteOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { useSearchStore } from '../stores/searchStore';
@@ -59,7 +59,7 @@ export const SearchHistory: React.FC<SearchHistoryProps> = ({ onSelect }) => {
                 <Text type="secondary" style={{ fontSize: 12 }}>
                   {formatDate(item.timestamp)}
                 </Text>
-                <Tag size="small">{item.hitCount} hits</Tag>
+                <Tag>{item.hitCount} hits</Tag>
               </Space>
             </Space>
           </List.Item>

@@ -22,11 +22,11 @@ export const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
     setProgress(0);
 
     try {
-      const result = await uploadApi.uploadFile(file, (percent) => {
-        setProgress(percent);
+      const result = await uploadApi.uploadFile(file, (progressEvent) => {
+        setProgress(progressEvent.percentage);
       });
 
-      if (result.success) {
+      if (result.status === 'success' || result.success) {
         message.success(t('library.uploadSuccess'));
         onUploadSuccess();
       } else {
