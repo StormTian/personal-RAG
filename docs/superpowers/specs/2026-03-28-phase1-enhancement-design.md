@@ -71,12 +71,12 @@ rag_system/
 │
 ├── rag_engine.py             # 修改：集成新模块
 ├── config/settings.py        # 修改：添加新配置类
-│
-└── models/                   # 新增：模型文件目录
-    ├── embedding/
-    │   └── all-MiniLM-L6-v2.onnx
-    └── reranker/
-        └── ms-marco.onnx
+
+models/                       # 新增：模型文件目录（项目根目录）
+├── embedding/
+│   └── all-MiniLM-L6-v2.onnx
+└── reranker/
+    └── ms-marco.onnx
 ```
 
 ### 职责划分
@@ -180,12 +180,12 @@ class IndexManager:
         self._chunk_map: Dict[int, Chunk] = {}
         self._lock = threading.RLock()
         
-    def add_document(self, doc_path: Path) -> bool:
+    async def add_document(self, doc_path: Path) -> bool:
         """增量添加单个文档
         
         流程：
         1. 加载文档并分块
-        2. 生成嵌入向量
+        2. 生成嵌入向量（异步）
         3. 添加到向量存储
         4. 更新BM25统计
         5. 更新chunk_map
@@ -207,13 +207,13 @@ class IndexManager:
         注意：FAISS不支持直接删除，使用标记删除方式
         """
         
-    def update_document(self, doc_path: Path) -> bool:
+    async def update_document(self, doc_path: Path) -> bool:
         """增量更新文档
         
         流程：先删除旧的chunk，再添加新的chunk
         """
         
-    def rebuild_full(self) -> None:
+    async def rebuild_full(self) -> None:
         """全量重建索引
         
         作为兜底方案，清空所有数据重新构建
@@ -966,10 +966,17 @@ class PRFReranker:
         
     def get_expansion_terms(
         self,
+        query: str,
         initial_results: List[SearchHit],
         bm25_store: BM25Store,
     ) -> List[str]:
-        """获取扩展词列表"""
+        """获取扩展词列表
+        
+        Args:
+            query: 原始查询（用于过滤已存在词）
+            initial_results: 初始搜索结果
+            bm25_store: BM25统计存储
+        """
 ```
 
 #### 7.2 扩展算法
@@ -977,6 +984,7 @@ class PRFReranker:
 ```python
 def get_expansion_terms(
     self,
+    query: str,
     initial_results: List[SearchHit],
     bm25_store: BM25Store,
 ) -> List[str]:
@@ -991,7 +999,7 @@ def get_expansion_terms(
         for term in terms:
             term_freq[term] += 1
     
-    # 过滤并排序
+    # 过滤并排序（过滤掉原始query中已有的词）
     original_terms = set(tokenize(query))
     
     expansion_terms = []
@@ -1016,7 +1024,7 @@ def expand_query(
     initial_results: List[SearchHit],
     bm25_store: BM25Store,
 ) -> str:
-    expansion_terms = self.get_expansion_terms(initial_results, bm25_store)
+    expansion_terms = self.get_expansion_terms(query, initial_results, bm25_store)
     
     if not expansion_terms:
         return query
