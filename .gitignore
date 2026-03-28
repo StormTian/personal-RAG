@@ -134,3 +134,4 @@ coverage.xml
 # Build artifacts
 *.tar.gz
 *.zip
+.worktrees/
