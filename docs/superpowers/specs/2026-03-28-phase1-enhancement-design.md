@@ -128,6 +128,31 @@ RAGEngine.search()
 
 ---
 
+## 前置依赖
+
+### tokenize 函数
+
+项目中已存在 `tokenize()` 函数，位于 `rag_system/utils/text.py`：
+
+```python
+def tokenize(text: str) -> List[str]:
+    """Tokenize text with support for English and Chinese.
+    
+    实现细节：
+    - 英文：正则提取 [a-z0-9]+ 单词
+    - 中文：N-gram 分词（2-3字符）
+    - 返回小写化后的 token 列表
+    
+    用途：
+    - BM25 词频统计
+    - PRF 高频词提取
+    """
+```
+
+BM25Store 和 PRFReranker 使用此函数进行词频统计，与 ONNX 后端的 Transformer tokenizer 分离（后者用于语义嵌入生成）。
+
+---
+
 ## 详细设计
 
 ### 1. IndexManager - 索引生命周期管理
