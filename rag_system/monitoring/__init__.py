@@ -5,6 +5,11 @@ from .metrics import MetricsCollector, PerformanceMetrics, get_metrics_collector
 from .health import HealthCheck, HealthStatus, get_health_checker, create_basic_health_checks
 from .tracing import init_tracing, get_tracer, set_span_status
 from .decorators import trace_span, trace_method
+from .prometheus_exporter import (
+    PrometheusExporter,
+    get_prometheus_exporter,
+    init_prometheus,
+)
 
 __all__ = [
     "setup_logging",
@@ -22,4 +27,7 @@ __all__ = [
     "set_span_status",
     "trace_span",
     "trace_method",
+    "PrometheusExporter",
+    "get_prometheus_exporter",
+    "init_prometheus",
 ]

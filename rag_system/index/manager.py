@@ -15,6 +15,7 @@ from rag_system.index.bm25_store import BM25Store
 from rag_system.utils.text import chunk_text
 from rag_system.api.loader import DocumentLoaderRegistry
 from rag_system.monitoring.decorators import trace_method
+from rag_system.monitoring.prometheus_exporter import get_prometheus_exporter
 
 
 @dataclass
@@ -111,9 +112,20 @@ class IndexManager:
 
                 self._last_update_time = datetime.now()
 
+            # Record metrics
+            exporter = get_prometheus_exporter()
+            exporter.record_index_operation("add", "success")
+            exporter.update_index_metrics(
+                documents=len(set(c.source for c in self._chunk_map.values())),
+                chunks=len(self._chunk_map)
+            )
+
             return True
 
         except Exception:
+            # Record failure metric
+            exporter = get_prometheus_exporter()
+            exporter.record_index_operation("add", "error")
             return False
 
     @trace_method("remove_document", {"operation": "index.remove"})
@@ -156,6 +168,14 @@ class IndexManager:
             # 5. 检查是否需要压缩
             if self._should_compress():
                 self._compress_index()
+
+            # Record metrics
+            exporter = get_prometheus_exporter()
+            exporter.record_index_operation("remove", "success")
+            exporter.update_index_metrics(
+                documents=len(set(c.source for c in self._chunk_map.values())),
+                chunks=len(self._chunk_map)
+            )
 
             return True
 
