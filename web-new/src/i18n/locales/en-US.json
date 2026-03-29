@@ -41,7 +41,17 @@
     "uploadDragText": "Click or drag files to this area to upload",
     "uploadHint": "Supports PDF, DOCX, TXT, Markdown formats",
     "uploadSuccess": "Upload successful",
-    "uploadError": "Upload failed"
+    "uploadError": "Upload failed",
+    "uploading": "Uploading {filename}..."
+  },
+  "upload": {
+    "queueTitle": "Upload Queue",
+    "clearCompleted": "Clear Completed",
+    "clearAll": "Clear All",
+    "statusPending": "Pending",
+    "statusUploading": "Uploading",
+    "statusSuccess": "Success",
+    "statusError": "Error"
   },
   "files": {
     "title": "File List",

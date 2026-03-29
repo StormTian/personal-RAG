@@ -1,8 +1,10 @@
-import React, { useState } from 'react';
-import { Upload, Progress, message } from 'antd';
+import React from 'react';
+import { Upload, message } from 'antd';
 import { InboxOutlined } from '@ant-design/icons';
 import { useTranslation } from 'react-i18next';
 import { uploadApi } from '@/services/api';
+import { useUploadProgress } from '@/features/upload/hooks/useUploadProgress';
+import { UploadProgressList } from '@/features/upload/components/UploadProgressList';
 
 const { Dragger } = Upload;
 
@@ -13,44 +15,64 @@ interface UploadAreaProps {
 const ACCEPTED_FORMATS = '.md,.txt,.doc,.docx,.pdf';
 
 export const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
-  const [uploading, setUploading] = useState(false);
-  const [progress, setProgress] = useState(0);
   const { t } = useTranslation();
+  const {
+    uploads,
+    addFiles,
+    updateProgress,
+    markSuccess,
+    markError,
+    clearCompleted,
+    clearAll,
+    hasActiveUploads,
+  } = useUploadProgress();
 
-  const handleUpload = async (file: File): Promise<boolean> => {
-    setUploading(true);
-    setProgress(0);
+  const handleBeforeUpload = (file: File): boolean => {
+    // Add file to queue
+    addFiles([file]);
+
+    // Start upload
+    handleUpload(file);
+
+    // Prevent default upload behavior
+    return false;
+  };
+
+  const handleUpload = async (file: File) => {
+    const uploadId = uploads.find((u) => u.file === file)?.id;
+    if (!uploadId) return;
 
     try {
       const result = await uploadApi.uploadFile(file, (progressEvent) => {
-        setProgress(progressEvent.percentage);
+        // Calculate bytes uploaded
+        const bytesUploaded = (progressEvent.percentage / 100) * file.size;
+        updateProgress(uploadId, progressEvent.percentage, bytesUploaded);
       });
 
       if (result.status === 'success' || result.success) {
-        message.success(t('library.uploadSuccess'));
+        markSuccess(uploadId);
+        message.success(t('library.uploadSuccess', { filename: file.name }));
         onUploadSuccess();
       } else {
+        markError(uploadId, result.message || t('library.uploadError'));
         message.error(result.message || t('library.uploadError'));
       }
     } catch (error) {
-      message.error(error instanceof Error ? error.message : t('library.uploadError'));
-    } finally {
-      setUploading(false);
-      setProgress(0);
+      const errorMessage = error instanceof Error ? error.message : t('library.uploadError');
+      markError(uploadId, errorMessage);
+      message.error(errorMessage);
     }
-
-    return false;
   };
 
   return (
     <div style={{ marginTop: 16 }}>
       <Dragger
         name="file"
-        multiple={false}
-        beforeUpload={handleUpload}
+        multiple={true}
+        beforeUpload={handleBeforeUpload}
         accept={ACCEPTED_FORMATS}
         showUploadList={false}
-        disabled={uploading}
+        disabled={hasActiveUploads}
       >
         <p className="ant-upload-drag-icon">
           <InboxOutlined />
@@ -59,10 +81,12 @@ export const UploadArea: React.FC<UploadAreaProps> = ({ onUploadSuccess }) => {
         <p className="ant-upload-hint">{t('library.uploadHint')}</p>
       </Dragger>
 
-      {uploading && (
-        <div style={{ marginTop: 16 }}>
-          <Progress percent={progress} status="active" />
-        </div>
+      {uploads.length > 0 && (
+        <UploadProgressList
+          uploads={uploads}
+          onClearCompleted={clearCompleted}
+          onClearAll={clearAll}
+        />
       )}
     </div>
   );
