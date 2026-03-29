@@ -1,9 +1,10 @@
 import React, { useMemo } from 'react';
-import { Card, Space, Typography, Skeleton, Empty, Alert } from 'antd';
+import { Card, Space, Typography, Skeleton, Empty, Alert, Row, Col } from 'antd';
 import { useTranslation } from 'react-i18next';
 import type { SearchResponse } from '@/types';
 import { AnswerCard } from './AnswerCard';
 import { ContextCard } from './ContextCard';
+import { FavoriteButton } from '@/features/search/components/FavoriteButton';
 
 const { Title } = Typography;
 
@@ -62,7 +63,16 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
   
   return (
     <Space direction="vertical" size="large" style={{ width: '100%' }}>
-      <AnswerCard lines={data.answer_lines} />
+      <Row justify="space-between" align="middle" style={{ width: '100%' }}>
+        <Col flex="auto">
+          <AnswerCard lines={data.answer_lines} />
+        </Col>
+        <Col>
+          {query && data.hits.length > 0 && (
+            <FavoriteButton query={query} hits={data.hits} />
+          )}
+        </Col>
+      </Row>
       
       <Card title={<Title level={4}>{t('result.contexts')}</Title>}>
         {data.hits.length === 0 ? (

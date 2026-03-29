@@ -3,6 +3,7 @@ import { Row, Col, Typography, Tag, Space, message } from 'antd';
 import { useTranslation } from 'react-i18next';
 import { SearchForm } from '@/features/search/components/SearchForm';
 import { SearchHistory } from '@/features/search/components/SearchHistory';
+import { FavoritesList } from '@/features/search/components/FavoritesList';
 import { LibraryPanel } from '@/features/library/components/LibraryPanel';
 import { ResultPanel } from '@/features/result/components/ResultPanel';
 import { useLibraryQuery } from '@/hooks/useLibraryQuery';
@@ -69,6 +70,7 @@ export const Home: React.FC = () => {
           <Space direction="vertical" size="large" style={{ width: '100%' }}>
             <SearchForm onSearch={handleSearch} loading={isSearching} />
             <SearchHistory onSelect={handleHistorySelect} />
+            <FavoritesList onSelect={handleHistorySelect} />
             <LibraryPanel
               data={libraryData}
               loading={isLibraryLoading || isReloading}

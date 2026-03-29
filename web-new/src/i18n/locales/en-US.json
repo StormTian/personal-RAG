@@ -15,7 +15,17 @@
     "noAnswer": "No answer generated",
     "history": "Search History",
     "clearHistory": "Clear History",
-    "hitCount": "Found {count} context matches"
+    "hitCount": "Found {count} context matches",
+    "favorites": "Favorites",
+    "favorite": "Favorite",
+    "favorited": "Favorited",
+    "addToFavorites": "Add to Favorites",
+    "removedFromFavorites": "Removed from favorites",
+    "addedToFavorites": "Added to favorites",
+    "favoriteDescription": "Save search results for \"{query}\"",
+    "favoriteNotesPlaceholder": "Add notes (optional)",
+    "noFavorites": "No favorites yet",
+    "save": "Save"
   },
   "library": {
     "title": "Document Library",

@@ -66,6 +66,15 @@ export interface SearchHistoryItem {
   hitCount: number;
 }
 
+// 收藏项目
+export interface FavoriteItem {
+  id: string;
+  query: string;
+  hits: SearchHit[];
+  createdAt: number;
+  notes?: string;
+}
+
 // ==================== 上传相关类型 ====================
 
 /**

@@ -15,7 +15,17 @@
     "noAnswer": "没有生成回答",
     "history": "搜索历史",
     "clearHistory": "清空历史",
-    "hitCount": "命中 {count} 条上下文"
+    "hitCount": "命中 {count} 条上下文",
+    "favorites": "收藏夹",
+    "favorite": "收藏",
+    "favorited": "已收藏",
+    "addToFavorites": "添加到收藏夹",
+    "removedFromFavorites": "已从收藏夹移除",
+    "addedToFavorites": "已添加到收藏夹",
+    "favoriteDescription": "收藏搜索结果 \"{query}\"",
+    "favoriteNotesPlaceholder": "添加备注（可选）",
+    "noFavorites": "暂无收藏",
+    "save": "保存"
   },
   "library": {
     "title": "文档库",
