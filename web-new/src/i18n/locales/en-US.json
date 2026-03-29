@@ -58,12 +58,32 @@
     "empty": "No files",
     "deleteConfirm": "Are you sure you want to delete file \"{filename}\"?",
     "deleteSuccess": "File \"{filename}\" deleted successfully",
-    "deleteError": "Failed to delete file \"{filename}\""
+    "deleteError": "Failed to delete file \"{filename}\"",
+    "detailTitle": "File Details",
+    "fileType": "File Type",
+    "fileSize": "File Size",
+    "title": "Title",
+    "chars": "Characters",
+    "modifiedAt": "Modified At",
+    "sourcePath": "Source Path",
+    "previewTitle": "Content Preview",
+    "previewNotAvailable": "Preview not available for this file type",
+    "totalCount": "Total {count} files",
+    "selectedCount": "Selected {selected}/{total}",
+    "selectAll": "Select All",
+    "deselectAll": "Deselect All",
+    "clearSelection": "Clear Selection",
+    "bulkDeleteConfirm": "Are you sure you want to delete {count} selected files?",
+    "bulkDeleteSuccess": "Successfully deleted {success}/{total} files",
+    "bulkDeleteError": "Failed to delete {count} files"
   },
   "common": {
     "delete": "Delete",
     "confirm": "Confirm",
-    "cancel": "Cancel"
+    "cancel": "Cancel",
+    "detail": "Detail",
+    "download": "Download",
+    "save": "Save"
   },
   "history": {
     "title": "Upload History",

@@ -58,12 +58,32 @@
     "empty": "暂无文件",
     "deleteConfirm": "确定要删除文件 \"{filename}\" 吗？",
     "deleteSuccess": "文件 \"{filename}\" 删除成功",
-    "deleteError": "删除文件 \"{filename}\" 失败"
+    "deleteError": "删除文件 \"{filename}\" 失败",
+    "detailTitle": "文件详情",
+    "fileType": "文件类型",
+    "fileSize": "文件大小",
+    "title": "标题",
+    "chars": "字符数",
+    "modifiedAt": "修改时间",
+    "sourcePath": "源路径",
+    "previewTitle": "内容预览",
+    "previewNotAvailable": "暂不支持此文件类型的预览",
+    "totalCount": "共 {count} 个文件",
+    "selectedCount": "已选择 {selected}/{total}",
+    "selectAll": "全选",
+    "deselectAll": "取消全选",
+    "clearSelection": "清除选择",
+    "bulkDeleteConfirm": "确定要删除选中的 {count} 个文件吗？",
+    "bulkDeleteSuccess": "成功删除 {success}/{total} 个文件",
+    "bulkDeleteError": "删除 {count} 个文件失败"
   },
   "common": {
     "delete": "删除",
     "confirm": "确定",
-    "cancel": "取消"
+    "cancel": "取消",
+    "detail": "详情",
+    "download": "下载",
+    "save": "保存"
   },
   "history": {
     "title": "上传历史",
