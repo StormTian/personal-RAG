@@ -5,6 +5,7 @@ import type { SearchResponse } from '@/types';
 import { AnswerCard } from './AnswerCard';
 import { ContextCard } from './ContextCard';
 import { FavoriteButton } from '@/features/search/components/FavoriteButton';
+import { SearchResultChart } from '@/features/search/components/SearchResultChart';
 
 const { Title } = Typography;
 
@@ -73,6 +74,10 @@ export const ResultPanel: React.FC<ResultPanelProps> = ({
           )}
         </Col>
       </Row>
+      
+      {data.hits.length > 0 && (
+        <SearchResultChart hits={data.hits} />
+      )}
       
       <Card title={<Title level={4}>{t('result.contexts')}</Title>}>
         {data.hits.length === 0 ? (
