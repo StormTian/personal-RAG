@@ -9,7 +9,7 @@ from typing import Dict, List, Optional, Set
 import numpy as np
 
 from rag_system.backends.vector_store.base import VectorStore
-from rag_system.core.base import Chunk, EmbeddingBackend, SourceDocument
+from rag_system.core.base import Chunk, EmbeddingBackend
 from rag_system.config.settings import ChunkingConfig
 from rag_system.index.bm25_store import BM25Store
 from rag_system.utils.text import chunk_text
