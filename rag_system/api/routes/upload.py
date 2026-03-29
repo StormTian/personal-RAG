@@ -4,7 +4,7 @@ import logging
 from datetime import datetime
 from typing import Optional
 
-from fastapi import APIRouter, File, UploadFile, Form, Depends, HTTPException, Request
+from fastapi import APIRouter, File, UploadFile, Form, Depends, HTTPException, Request, BackgroundTasks
 from fastapi.responses import JSONResponse
 
 from ...services.file_service import FileService
@@ -36,9 +36,32 @@ def get_history_service() -> HistoryService:
     return HistoryService()
 
 
+async def _reload_rag_index(record_id: int, history_service: HistoryService):
+    """后台任务：重新加载RAG索引"""
+    try:
+        logger.info("后台重新加载RAG索引...")
+        rag = get_rag_engine()
+        await rag.reload_async()
+        
+        # 更新记录状态
+        history_service.update_record_status(
+            record_id=record_id,
+            status=UploadStatus.SUCCESS,
+        )
+        logger.info("RAG索引重新加载完成")
+    except Exception as e:
+        logger.error(f"后台重新加载RAG索引失败: {e}")
+        # 记录失败但不影响上传结果
+        history_service.update_record_status(
+            record_id=record_id,
+            status=UploadStatus.SUCCESS,
+        )
+
+
 @router.post("/api/upload")
 async def upload_file(
     request: Request,
+    background_tasks: BackgroundTasks,
     file: UploadFile = File(..., description="File to upload"),
     auto_reload: bool = Form(True, description="Automatically reload RAG index after upload"),
     api_key: Optional[str] = Depends(get_security),
@@ -132,33 +155,11 @@ async def upload_file(
         logger.exception(f"Failed to upload file: {file.filename}")
         raise HTTPException(status_code=500, detail=f"Upload failed: {str(e)}")
     
-    # Reload RAG index if requested
-    reloaded = False
-    library_stats = None
-    
+    # Reload RAG index if requested (后台异步执行)
     if auto_reload:
-        try:
-            logger.info("Reloading RAG index...")
-            rag = get_rag_engine()
-            await rag.reload_async()
-            reloaded = True
-            library_stats = rag.stats()
-            
-            # Update record
-            record.auto_reloaded = True
-            history_service.update_record_status(
-                record_id=record.id,
-                status=UploadStatus.SUCCESS,
-            )
-            logger.info("RAG index reloaded successfully")
-            
-        except Exception as e:
-            logger.warning(f"Failed to reload RAG index: {e}")
-            record.auto_reloaded = False
-            history_service.update_record_status(
-                record_id=record.id,
-                status=UploadStatus.SUCCESS,
-            )
+        # 添加后台任务，不阻塞响应
+        background_tasks.add_task(_reload_rag_index, record.id, history_service)
+        logger.info(f"文件上传成功，RAG索引重新加载已加入后台任务队列: {file_info.stored_name}")
     
     # Build response
     response = {
@@ -171,15 +172,8 @@ async def upload_file(
             "size": record.file_size,
             "type": record.file_type,
         },
-        "reloaded": reloaded,
+        "reloading": auto_reload,
     }
-    
-    if library_stats:
-        response["library_stats"] = {
-            "documents": library_stats.get("documents", 0),
-            "chunks": library_stats.get("chunks", 0),
-            "supported_formats": library_stats.get("supported_formats", []),
-        }
     
     return response
 
