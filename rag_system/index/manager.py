@@ -14,6 +14,7 @@ from rag_system.config.settings import ChunkingConfig
 from rag_system.index.bm25_store import BM25Store
 from rag_system.utils.text import chunk_text
 from rag_system.api.loader import DocumentLoaderRegistry
+from rag_system.monitoring.decorators import trace_method
 
 
 @dataclass
@@ -51,6 +52,7 @@ class IndexManager:
         self._last_update_time: Optional[datetime] = None
         self._loader_registry = DocumentLoaderRegistry()
 
+    @trace_method("add_document", {"operation": "index.add"})
     async def add_document(self, doc_path: Path) -> bool:
         """增量添加单个文档
 
@@ -114,6 +116,7 @@ class IndexManager:
         except Exception:
             return False
 
+    @trace_method("remove_document", {"operation": "index.remove"})
     def remove_document(self, doc_path: Path) -> bool:
         """增量删除文档
 
